@@ -1,0 +1,172 @@
+function varargout = td_demo(varargin)
+    % TD_DEMO MATLAB code for td_demo.fig
+    %      TD_DEMO, by itself, creates a new TD_DEMO or raises the existing
+    %      singleton*.
+    %
+    %      H = TD_DEMO returns the handle to a new TD_DEMO or the handle to
+    %      the existing singleton*.
+    %
+    %      TD_DEMO('CALLBACK',hObject,eventData,handles,...) calls the local
+    %      function named CALLBACK in TD_DEMO.M with the given input arguments.
+    %
+    %      TD_DEMO('Property','Value',...) creates a new TD_DEMO or raises the
+    %      existing singleton*.  Starting from the left, property value pairs are
+    %      applied to the GUI before td_demo_OpeningFcn gets called.  An
+    %      unrecognized property name or invalid value makes property application
+    %      stop.  All inputs are passed to td_demo_OpeningFcn via varargin.
+    %
+    %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
+    %      instance to run (singleton)".
+    %
+    % See also: GUIDE, GUIDATA, GUIHANDLES
+
+    gui_Singleton = 1;
+    gui_State = struct('gui_Name',       mfilename, ...
+                       'gui_Singleton',  gui_Singleton, ...
+                       'gui_OpeningFcn', @td_demo_OpeningFcn, ...
+                       'gui_OutputFcn',  @td_demo_OutputFcn, ...
+                       'gui_LayoutFcn',  [] , ...
+                       'gui_Callback',   []);
+    if nargin && ischar(varargin{1})
+        gui_State.gui_Callback = str2func(varargin{1});
+    end
+
+    if nargout
+        [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
+    else
+        gui_mainfcn(gui_State, varargin{:});
+    end
+end
+
+% --- Executes just before td_demo is made visible.
+function td_demo_OpeningFcn(hObject, eventdata, handles, varargin)
+    handles.output = hObject;
+    f = warndlg(['In this study you will be asked about your preferences regarding different amounts of money'...
+    ' to be delivered at different times in the future.  You will have several seconds to decide between the '...
+    'two options provided on the screen, so there is no rush to respond. If you prefer the option on the left.'...
+    'you should press the left button to indicate your choice. If you prefer the option on the right, please '...
+    'press the right button. After you have responded. There will then be a brief pause before the next pair of '...
+    'alternatives is presented. You may be asked to choose between the same set of options more than once. '...
+    'There are no wrong answers in this experiment. Please indicate your preference as honestly as you can, '...
+    'and make your best guess when you are not sure.'],'Instructions');
+    % Update handles structure
+    guidata(hObject, handles);
+end
+
+
+function varargout = td_demo_OutputFcn(hObject, eventdata, handles) 
+    global sequence trial
+    sequence = [3650/7,700;1825/7,600;730/7,500;365/7,400;300/7,300]; % sequence to demo the task for participants
+    trial=1;
+    handles.output = hObject;
+    % Get default command line output from handles structure
+    varargout{1} = handles.output;
+end
+
+% --- Convert time from number to text
+function time = parse_time(logtime)
+    days = logtime*7;
+    if days>364
+       years = round(days/365);
+       if years~=1
+           time = [num2str(years),' years'];
+       else
+           time = [num2str(years),' year'];
+       end
+
+       if abs(years-days/365)>0.1
+           time = [time, ' and a half'];
+       end
+    elseif days<21,
+       if days==1
+           time = [num2str(round(days)), ' day'];
+       else
+            time = [num2str(round(days)), ' days'];
+       end
+    elseif days<59
+        weeks = round(days/7);
+        time = [num2str(weeks),' weeks'];
+        if abs(weeks-days/7)>0.1
+           time = [time, ' and a half'];
+        end
+    else
+        months = round(days/30);
+        time = [num2str(months),' months'];
+        if abs(months-days/30)>0.1
+            time = [time, ' and a half'];
+        end
+    end
+end
+
+% --- Choose next element in sequence
+function pushbutton1_Callback(hObject, eventdata, handles)
+    global trial sequence
+    if trial==1
+        set(handles.pushbutton2, 'visible','on');
+    end
+    set(handles.pushbutton1,'Enable','off');
+    set(handles.pushbutton2,'Enable','off');
+
+    next_design = sequence(trial,:);
+
+    trial=trial+1;
+    time_string = parse_time(next_design(1));
+    money_string = sprintf('$%0.0f',next_design(2));
+    set(handles.pushbutton1,'string',[money_string, ' Now']);
+    set(handles.pushbutton2,'string',['$800 in ', time_string]);
+    set(handles.pushbutton1,'Enable','on');
+    set(handles.pushbutton2,'Enable','on');
+    if trial>5
+        set(handles.pushbutton1,'visible','off');
+        set(handles.pushbutton2,'visible','off');
+        set(handles.text3,'visible','on');
+        set(handles.pushbutton3,'visible','on');
+    end
+end
+
+% --- disable some buttons while handeling data
+function pushbutton2_Callback(hObject, eventdata, handles)
+    global trial sequence
+    set(handles.pushbutton1,'Enable','off');
+    set(handles.pushbutton2,'Enable','off');
+
+    next_design = sequence(trial,:);
+
+
+    trial=trial+1;
+    time_string = parse_time(next_design(1));
+    money_string = sprintf('$%0.0f',next_design(2));
+    set(handles.pushbutton1,'string',[money_string, ' Now']);
+    set(handles.pushbutton2,'string',['$800 in ', time_string]);
+    set(handles.pushbutton1,'Enable','on');
+    set(handles.pushbutton2,'Enable','on');
+    if trial>5
+        set(handles.pushbutton1,'visible','off');
+        set(handles.pushbutton2,'visible','off');
+        set(handles.text3,'visible','on');
+        set(handles.pushbutton3,'visible','on');
+    end
+end
+
+% --- Choose next 
+function pushbutton3_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+close(td_demo);
+run('td_gui');
+
+
+% --- Executes on button press in pushbutton4.
+function pushbutton4_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+f = warndlg(['In this study you will be asked about your preferences regarding different amounts of money'...
+' to be delivered at different times in the future.  You will have several seconds to decide between the '...
+'two options provided on the screen, so there is no rush to respond. If you prefer the option on the left.'...
+'you should press the left button to indicate your choice. If you prefer the option on the right, please '...
+'press the right button. After you have responded. There will then be a brief pause before the next pair of '...
+'alternatives is presented. You may be asked to choose between the same set of options more than once. '...
+'There are no wrong answers in this experiment. Please indicate your preference as honestly as you can, '...
+'and make your best guess when you are not sure.'],'Instructions');
